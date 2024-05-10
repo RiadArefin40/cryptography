@@ -131,29 +131,27 @@
     return encryptedText;
 }
 
-function decrypt(ciphertext, keyword) {
+function decrypt(ciphertext, numericKey) {
     let decryptedText = '';
-    let key = keyword;
+    let first = true;
 
     for (let i = 0; i < ciphertext.length; i++) {
-        if (ciphertext[i].match(/[a-z]/i)) {
+        if (ciphertext[i].match(/[a-z]/i)) {  // Process only alphabetic characters
             let ciphertextCode = ciphertext.charCodeAt(i);
-            let keyCode = key.charCodeAt(i);
 
-            // Convert both ciphertext and key character codes to 0-25 range
-            let cipherIndex = ciphertextCode >= 65 && ciphertextCode <= 90 ? ciphertextCode - 65 : ciphertextCode - 97;
-            let keyIndex = keyCode >= 65 && keyCode <= 90 ? keyCode - 65 : keyCode - 97;
+            let keyShift;
+            if (first) {
+                keyShift = numericKey;
+                first = false;
+            } else {
+                // Retrieve the shift from the previous decrypted character
+                let previousCharDecrypted = decryptedText.charCodeAt(i - 1);
+                keyShift = (previousCharDecrypted - (previousCharDecrypted < 97 ? 65 : 97)) % 26;
+            }
 
-            // Decrypt using Vigenère formula: (ciphertext - key + 26) % 26
-            let decryptedIndex = (cipherIndex - keyIndex + 26) % 26;
-            let decryptedChar = ciphertextCode >= 65 && ciphertextCode <= 90
-                ? String.fromCharCode(decryptedIndex + 65)  // Uppercase result
-                : String.fromCharCode(decryptedIndex + 97); // Lowercase result
-            
-            decryptedText += decryptedChar;
-
-            // Extend key with the decrypted character for subsequent cycles
-            key += decryptedChar;
+            // Calculate the original character code
+            let originalCharCode = ((ciphertextCode - (ciphertextCode < 97 ? 65 : 97) - keyShift + 26) % 26) + (ciphertextCode < 97 ? 65 : 97);
+            decryptedText += String.fromCharCode(originalCharCode);
         } else {
             decryptedText += ciphertext[i];  // Non-alphabet characters are not modified
         }
@@ -161,6 +159,7 @@ function decrypt(ciphertext, keyword) {
 
     return decryptedText;
 }
+
 
 
 
